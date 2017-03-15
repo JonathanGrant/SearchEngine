@@ -3,6 +3,7 @@ import string
 class IndexedWord:
 	def __init__(self, word):
 		self.word = word
+		self.totalCount = 0
 		self.sequentialDocumentIds = []
 		self.lastDocId = None
 
@@ -12,21 +13,30 @@ class IndexedWord:
 			if newDocId == self.lastDocId:
 				return
 			docIdToAdd -= self.lastDocId
-		self.sequentialDocumentIds.append(docIdToAdd)
+		self.sequentialDocumentIds.append([docIdToAdd, 0])
 		self.lastDocId = newDocId
+
+	def wordOccured(self, docId):
+		self.addDocId(docId)
+		self.totalCount += 1
+		self.sequentialDocumentIds[len(self.sequentialDocumentIds) - 1][1] += 1
 
 class IndexedWordList:
 	def __init__(self):
 		self.inedexedWordList = []
+		self.docWordCountList = []
 
 	def addWordToListWithDocId(self, word, docId):
+		if len(self.docWordCountList) < docId:
+			self.docWordCountList.append(0)
+		self.docWordCountList[docId - 1] += 1
 		# Binary Search on list to see where the word would be
 		wordIndex = self.getWordIndexInList(word)
 		if wordIndex < len(self.inedexedWordList) and self.inedexedWordList[wordIndex].word == word:
-			self.inedexedWordList[wordIndex].addDocId(docId)
+			self.inedexedWordList[wordIndex].wordOccured(docId)
 		else:
 			newWord = IndexedWord(word)
-			newWord.addDocId(docId)
+			newWord.wordOccured(docId)
 			self.inedexedWordList.insert(wordIndex, newWord)
 
 	def getWordIndexInList(self, word):
@@ -74,6 +84,7 @@ class Reader:
 			if line.startswith("<P>"):
 				self.addWordsToDict(self.getWordsFromText(line.replace("<P>", "").replace("</P>","").replace("\n","")), 1)
 		self.dict.printWordList()
+		print self.dict.docWordCountList
 
 	def parseDoc(self, doc):
 		for line in f:
