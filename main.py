@@ -71,9 +71,9 @@ class Reader:
 	def addDocIdToList(self, docId):
 		self.documentIdToNumList.append(docId)
 
-	def addWordsToDict(self, words, docId):
+	def addWordsToDict(self, words):
 		for word in words:
-			self.dict.addWordToListWithDocId(word, docId)
+			self.dict.addWordToListWithDocId(word, self.currentDocNum)
 
 	def getWordsFromText(self, text):
 		text = text.translate(None, string.punctuation)
@@ -82,7 +82,7 @@ class Reader:
 	def getWordsFromDoc(self, doc):
 		for line in f:
 			if line.startswith("<P>"):
-				self.addWordsToDict(self.getWordsFromText(line.replace("<P>", "").replace("</P>","").replace("\n","")), 1)
+				self.addWordsToDict(self.getWordsFromText(line.replace("<P>", "").replace("</P>","").replace("\n","")))
 		self.dict.printWordList()
 		print self.dict.docWordCountList
 
@@ -90,12 +90,16 @@ class Reader:
 		for line in f:
 			if line.startswith("<DOCID>"):
 				self.addDocIdToList(line.replace("<DOCID>", "").replace("</DOCID>", ""))
+				self.currentDocNum += 1
 			elif line.startswith("<P>"):
-				self.addWordsToDict(self.getWordsFromText(line.replace("<P>", "").replace("</P>","")))
+				wordsFromDoc = self.getWordsFromText(line.replace("<P>", "").replace("</P>","").replace("\n",""))
+				self.addWordsToDict(wordsFromDoc)
+		self.dict.printWordList()
+		print self.dict.docWordCountList
 
 f = open('example.xml', 'r')
 reader = Reader()
-reader.getWordsFromDoc(f)
+reader.parseDoc(f)
 
 f = open('myfile', 'w')
 f.write('hi there\n')
